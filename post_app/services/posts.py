@@ -1,15 +1,33 @@
-from fastapi import Depends, HTTPException
+import uuid
 
+from fastapi import Depends, HTTPException, UploadFile
+
+from adapters.storage.base import StorageAdapter
+from core.adapters import get_storage
 from models import Post
 from repositories import PostRepository
 
 
 class PostService:
-    def __init__(self, repository: PostRepository = Depends(PostRepository)):
+    def __init__(
+            self,
+            repository: PostRepository = Depends(PostRepository),
+            storage: StorageAdapter = Depends(get_storage)
+    ):
         self.repository = repository
+        self.storage = storage
 
-    def create_post(self, post_text: str, owner_id: int) -> Post:
-        return self.repository.create(post_text, owner_id)
+
+    def create_post(self, post_text: str, owner_id: int, image: UploadFile | None = None) -> Post:
+        if image is not None:
+            content = image.file.read()
+            ext = image.filename.split('.')[-1] if image.filename else "bin"
+            if ext not in ("jpeg", "jpg", "png"):
+                raise HTTPException(400, "Invalid image format")
+
+            key = f"posts/{uuid.uuid4()}.{ext}"
+            img_url = self.storage.upload(content, key, image.content_type or "application/octet-stream")
+        return self.repository.create(post_text, owner_id, img_url)
 
     def get_post(self, post_id: int) -> Post:
         post = self.repository.get_by_id(post_id)

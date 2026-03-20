@@ -10,6 +10,12 @@ class Settings(BaseSettings):
 
     secret_key: str
 
+    s3_bucket: str
+    s3_url: str
+    s3_access_key: str
+    s3_secret_key: str
+    s3_region: str
+
     # Конфигурация источника данных (в данном случае .env)
     model_config = SettingsConfigDict(env_file=".env")
 

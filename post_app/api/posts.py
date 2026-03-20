@@ -1,6 +1,6 @@
-from typing import List
+from typing import List, Annotated
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, UploadFile, File, Form
 from starlette.responses import JSONResponse
 
 from services import PostService
@@ -13,10 +13,11 @@ router = APIRouter(prefix="/posts", tags=["posts"])
 @router.post("/")
 def create_post(
     current_user: CurrentUserDep,
-    post: PostCreateSchema,
+    post_text: Annotated[str, Form(min_length=1, max_length=10000)],
+    image: Annotated[UploadFile | None, File()] = None,
     service: PostService = Depends(PostService),
 ) -> PostInfoSchema:
-    return service.create_post(post.post_text, current_user.id)
+    return service.create_post(post_text, current_user.id, image)
 
 
 @router.get("/")

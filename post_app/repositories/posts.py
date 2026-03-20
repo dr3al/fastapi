@@ -11,7 +11,7 @@ class PostRepository:
     def __init__(self, db: Session = Depends(get_db)):
         self.db = db
 
-    def create(self, post_text: str, owner_id: int, img_url: str|None = None) -> Post:
+    def create(self, post_text: str, owner_id: int, img_url: str | None = None) -> Post:
         db_post = Post(post_text=post_text, owner_id=owner_id, img_url=img_url)
         self.db.add(db_post)
         self.db.commit()
