@@ -17,31 +17,31 @@ class PostService:
         self.repository = repository
         self.storage = storage
 
-
-    def create_post(self, post_text: str, owner_id: int, image: UploadFile | None = None) -> Post:
+    async def create_post(self, post_text: str, owner_id: int, image: UploadFile | None = None) -> Post:
+        img_url = None
         if image is not None:
-            content = image.file.read()
+            content = await image.read()
             ext = image.filename.split('.')[-1] if image.filename else "bin"
             if ext not in ("jpeg", "jpg", "png"):
                 raise HTTPException(400, "Invalid image format")
 
             key = f"posts/{uuid.uuid4()}.{ext}"
-            img_url = self.storage.upload(content, key, image.content_type or "application/octet-stream")
-        return self.repository.create(post_text, owner_id, img_url)
+            img_url = await self.storage.upload(content, key, image.content_type or "application/octet-stream")
+        return await self.repository.create(post_text, owner_id, img_url)
 
-    def get_post(self, post_id: int) -> Post:
-        post = self.repository.get_by_id(post_id)
+    async def get_post(self, post_id: int) -> Post:
+        post = await self.repository.get_by_id(post_id)
         if post is None:
             raise HTTPException(status_code=404, detail="Post not found")
         return post
 
-    def get_all_posts(self) -> list[Post]:
-        return self.repository.get_all()
+    async def get_all_posts(self) -> list[Post]:
+        return await self.repository.get_all()
 
-    def delete_post(self, post_id: int, current_user_id: int) -> Post:
-        post = self.repository.get_by_id(post_id)
+    async def delete_post(self, post_id: int, current_user_id: int) -> None:
+        post = await self.repository.get_by_id(post_id)
         if post is None:
             raise HTTPException(status_code=404, detail="Post not found")
         if post.owner_id != current_user_id:
             raise HTTPException(status_code=403, detail="You are not the owner of the post")
-        self.repository.delete(post)
+        await self.repository.delete(post)

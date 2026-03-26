@@ -1,9 +1,7 @@
 from typing import Annotated, Any
 from fastapi import Depends, HTTPException
 from fastapi.requests import Request
-from sqlalchemy.orm import Session
 
-from core.database import get_db
 from core.security import decode_access_token
 from models import User
 from repositories import UserRepository
@@ -14,7 +12,7 @@ PaginationDep = Annotated[PaginationParams, Depends(PaginationParams)]
 FilterParamsDep = Annotated[FilterParams, Depends(FilterParams)]
 
 
-def get_current_user(request: Request, repository: UserRepository = Depends(UserRepository)) -> Any:
+async def get_current_user(request: Request, repository: UserRepository = Depends(UserRepository)) -> Any:
     token = request.cookies.get("access_token")
     if not token:
         raise HTTPException(status_code=401, detail="Отсутствует токен")
@@ -27,7 +25,7 @@ def get_current_user(request: Request, repository: UserRepository = Depends(User
     if not username:
         raise HTTPException(status_code=401, detail="Невалидный токен")
 
-    user = repository.get_by_username(username)
+    user = await repository.get_by_username(username)
     if not user:
         raise HTTPException(status_code=401, detail="Пользователь не найден")
 

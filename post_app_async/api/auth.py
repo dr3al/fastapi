@@ -12,29 +12,29 @@ router = APIRouter(prefix= "/auth", tags=["auth"])
 
 
 @router.post("/register", status_code=status.HTTP_201_CREATED)
-def register_user(
+async def register_user(
         user: UserRegistrationSchema,
         service: UserService = Depends()
 ) -> UserInfoSchema:
-    db_user = service.create_user(user)
+    db_user = await service.create_user(user)
 
     return db_user
 
 
 @router.post("/login", status_code=status.HTTP_200_OK)
-def login_user(
+async def login_user(
         response: Response,
         credentials: UserLoginSchema,
         service: UserService = Depends()
 ) -> AccessTokenSchema:
-    token = service.authenticate_user(credentials)
+    token = await service.authenticate_user(credentials)
     response.set_cookie(key="access_token", value=token.access_token, httponly=True)
 
     return token
 
 
 @router.get("/test")
-def test_auth(
+async def test_auth(
         request: Request,
 ):
     token = request.cookies.get("access_token")
@@ -44,7 +44,5 @@ def test_auth(
             detail="Could not validate credentials",
         )
     token_details = decode_access_token(token)
-
-
 
     return JSONResponse({"username": token_details.get("sub")})

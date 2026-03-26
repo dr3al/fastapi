@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, Text, String, ForeignKey
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 
 from core.database import Base
@@ -11,5 +11,6 @@ class Post(Base):
     img_url = Column(String, nullable=True)
     owner_id = Column(Integer, ForeignKey('users.id'), nullable=False)
 
-
-    owner = relationship("User", back_populates="posts")
+#relationship() нужно пометить как lazy-loaded через selectin или использовать lazy="selectin",
+    # потому что в async-режиме lazy loading (lazy="select") запрещён — он делает неявный синхронный запрос
+    owner = relationship("User", back_populates="posts", lazy="selectin")
